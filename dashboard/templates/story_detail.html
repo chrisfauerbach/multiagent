@@ -1,5 +1,8 @@
 {% extends "base.html" %}
 {% block title %}Story {{ story.story_id if story else "Not Found" }}{% endblock %}
+{% block head_extra %}
+{% if story %}<meta name="story-id" content="{{ story.story_id }}">{% endif %}
+{% endblock %}
 {% block content %}
 {% if story %}
 <h1>{{ story.title or "Untitled" }}</h1>

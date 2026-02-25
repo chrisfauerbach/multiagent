@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from dashboard.routes import pipeline, stories, agents
+from dashboard.routes import pipeline, stories, agents, events
 
 app = FastAPI(title="AI Publishing House Dashboard")
 
@@ -21,3 +21,4 @@ agents.templates = templates
 app.include_router(pipeline.router)
 app.include_router(stories.router)
 app.include_router(agents.router)
+app.include_router(events.router)

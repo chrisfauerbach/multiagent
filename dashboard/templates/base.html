@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}AI Publishing House{% endblock %}</title>
     <link rel="stylesheet" href="/static/style.css">
+    {% block head_extra %}{% endblock %}
 </head>
 <body>
     <nav class="navbar">
@@ -14,9 +15,14 @@
             <a href="/stories">Stories</a>
             <a href="/agents/activity">Agent Log</a>
         </div>
+        <div class="sse-indicator">
+            <span id="sse-dot" class="sse-dot disconnected"></span>
+            <span id="sse-label" class="sse-label">Offline</span>
+        </div>
     </nav>
     <main class="container">
         {% block content %}{% endblock %}
     </main>
+    <script src="/static/sse.js"></script>
 </body>
 </html>

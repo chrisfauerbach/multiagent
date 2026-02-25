@@ -258,3 +258,53 @@ details summary {
     font-weight: 600;
     margin-bottom: 0.5rem;
 }
+
+/* SSE live indicator */
+.sse-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-left: auto;
+}
+
+.sse-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+.sse-dot.connected {
+    background: var(--success);
+    box-shadow: 0 0 4px var(--success);
+}
+.sse-dot.disconnected {
+    background: var(--danger);
+    animation: pulse-dot 1.5s ease-in-out infinite;
+}
+.sse-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+@keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+/* Flash on event received */
+.sse-flash {
+    animation: flash-scale 0.3s ease-out;
+}
+@keyframes flash-scale {
+    0% { transform: scale(1.8); }
+    100% { transform: scale(1); }
+}
+
+/* New activity row flash */
+.new-row-flash {
+    animation: row-highlight 1.5s ease-out;
+}
+@keyframes row-highlight {
+    0% { background: rgba(108, 92, 231, 0.3); }
+    100% { background: transparent; }
+}
