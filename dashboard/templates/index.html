@@ -29,6 +29,7 @@
             <th>Revisions</th>
             <th>Time</th>
             <th>Tokens</th>
+            <th>Tok/s</th>
             <th>Updated</th>
         </tr>
     </thead>
@@ -41,6 +42,7 @@
             <td>{{ s.revision_count }}</td>
             <td>{{ "%.0f" | format(s.total_duration_seconds) }}s</td>
             <td>{{ "{:,}".format(s.total_tokens) }}</td>
+            <td>{{ "%.1f" | format(s.total_tokens / s.total_duration_seconds) if s.total_duration_seconds > 0 else "—" }}</td>
             <td>{{ s.updated_at.strftime('%Y-%m-%d %H:%M') }}</td>
         </tr>
         {% endfor %}

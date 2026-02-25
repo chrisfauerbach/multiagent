@@ -36,6 +36,10 @@
             <div class="stage-count">{{ "{:,}".format(story.total_tokens) }}</div>
             <div class="stage-label">Total Tokens</div>
         </div>
+        <div class="stage-card">
+            <div class="stage-count">{{ "%.1f" | format(story.total_tokens / story.total_duration_seconds) if story.total_duration_seconds > 0 else "—" }}</div>
+            <div class="stage-label">Tokens / Sec</div>
+        </div>
     </div>
     <table class="data-table">
         <thead>
@@ -47,6 +51,7 @@
                 <th>Prompt Tok</th>
                 <th>Completion Tok</th>
                 <th>Total Tok</th>
+                <th>Tok/s</th>
                 <th>Time</th>
             </tr>
         </thead>
@@ -60,6 +65,7 @@
                 <td>{{ "{:,}".format(m.prompt_tokens) }}</td>
                 <td>{{ "{:,}".format(m.completion_tokens) }}</td>
                 <td>{{ "{:,}".format(m.total_tokens) }}</td>
+                <td>{{ "%.1f" | format(m.total_tokens / m.duration_seconds) if m.duration_seconds > 0 else "—" }}</td>
                 <td class="timestamp">{{ m.timestamp.strftime('%H:%M:%S') }}</td>
             </tr>
             {% endfor %}
