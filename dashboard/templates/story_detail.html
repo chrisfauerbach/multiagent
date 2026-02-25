@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}Story {{ story.story_id if story else "Not Found" }}{% endblock %}
+{% block content %}
+{% if story %}
+<h1>{{ story.title or "Untitled" }}</h1>
+<div class="story-meta">
+    <span class="badge badge-{{ story.status.value | lower }}">{{ story.status.value }}</span>
+    <span>ID: {{ story.story_id }}</span>
+    <span>Revisions: {{ story.revision_count }}/{{ story.max_revisions }}</span>
+    {% if story.prompt %}
+    <span>Genre: {{ story.prompt.genre }}</span>
+    <span>Target: {{ story.prompt.target_word_count }} words</span>
+    {% endif %}
+</div>
+
+{% if story.metrics %}
+<section class="section">
+    <h2>Performance Metrics</h2>
+    <div class="metrics-summary">
+        <div class="stage-card">
+            <div class="stage-count">{{ "%.1f" | format(story.total_duration_seconds) }}s</div>
+            <div class="stage-label">Total Time</div>
+        </div>
+        <div class="stage-card">
+            <div class="stage-count">{{ "{:,}".format(story.total_prompt_tokens) }}</div>
+            <div class="stage-label">Prompt Tokens</div>
+        </div>
+        <div class="stage-card">
+            <div class="stage-count">{{ "{:,}".format(story.total_completion_tokens) }}</div>
+            <div class="stage-label">Completion Tokens</div>
+        </div>
+        <div class="stage-card">
+            <div class="stage-count">{{ "{:,}".format(story.total_tokens) }}</div>
+            <div class="stage-label">Total Tokens</div>
+        </div>
+    </div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Agent</th>
+                <th>Action</th>
+                <th>Round</th>
+                <th>Duration</th>
+                <th>Prompt Tok</th>
+                <th>Completion Tok</th>
+                <th>Total Tok</th>
+                <th>Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for m in story.metrics %}
+            <tr>
+                <td><span class="agent-name agent-{{ m.agent }}">{{ m.agent }}</span></td>
+                <td>{{ m.action }}</td>
+                <td>{{ m.round_number or "—" }}</td>
+                <td>{{ "%.1f" | format(m.duration_seconds) }}s</td>
+                <td>{{ "{:,}".format(m.prompt_tokens) }}</td>
+                <td>{{ "{:,}".format(m.completion_tokens) }}</td>
+                <td>{{ "{:,}".format(m.total_tokens) }}</td>
+                <td class="timestamp">{{ m.timestamp.strftime('%H:%M:%S') }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endif %}
+
+{% if story.prompt %}
+<section class="section">
+    <h2>Writing Prompt</h2>
+    <div class="card">
+        <p><strong>Theme:</strong> {{ story.prompt.theme }}</p>
+        <pre class="prompt-text">{{ story.prompt.setting }}</pre>
+    </div>
+</section>
+{% endif %}
+
+<section class="section">
+    <h2>Current Draft</h2>
+    <div class="card">
+        {% if story.current_draft %}
+        <div class="story-text">{{ story.current_draft }}</div>
+        <p class="word-count">Word count: ~{{ story.current_draft.split() | length }}</p>
+        {% else %}
+        <p class="empty-state">No draft yet.</p>
+        {% endif %}
+    </div>
+</section>
+
+{% if story.feedback %}
+<section class="section">
+    <h2>Feedback Timeline</h2>
+    {% for fb in story.feedback %}
+    <div class="card feedback-card">
+        <div class="feedback-header">
+            <strong>{{ fb.agent | title }}</strong> &mdash; Round {{ fb.round_number }}
+            <span class="badge {% if fb.approved %}badge-approved{% else %}badge-revision_needed{% endif %}">
+                {{ "Approved" if fb.approved else "Changes Requested" }}
+            </span>
+            <span class="timestamp">{{ fb.timestamp.strftime('%Y-%m-%d %H:%M') }}</span>
+        </div>
+        <pre class="feedback-text">{{ fb.feedback }}</pre>
+    </div>
+    {% endfor %}
+</section>
+{% endif %}
+
+{% if story.revisions %}
+<section class="section">
+    <h2>Revision History</h2>
+    {% for rev in story.revisions %}
+    <details class="card">
+        <summary>Revision {{ rev.round_number }} &mdash; {{ rev.timestamp.strftime('%Y-%m-%d %H:%M') }}</summary>
+        <p><strong>Feedback addressed:</strong></p>
+        <pre class="feedback-text">{{ rev.feedback_addressed }}</pre>
+        <p><strong>Revised text:</strong></p>
+        <div class="story-text">{{ rev.content }}</div>
+    </details>
+    {% endfor %}
+</section>
+{% endif %}
+
+{% else %}
+<h1>Story Not Found</h1>
+<p>No story with this ID exists.</p>
+{% endif %}
+{% endblock %}

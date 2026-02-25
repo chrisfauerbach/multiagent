@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Stories - AI Publishing House{% endblock %}
+{% block content %}
+<h1>Stories</h1>
+
+<div class="filters">
+    <a href="/stories" class="btn {% if not current_status %}btn-active{% endif %}">All</a>
+    {% for status in ["PROMPT_CREATED", "DRAFT_WRITTEN", "IN_REVIEW", "REVISION_NEEDED", "REVISED", "APPROVED", "PUBLISHED"] %}
+    <a href="/stories?status={{ status }}" class="btn {% if current_status == status %}btn-active{% endif %}">
+        {{ status.replace("_", " ") }}
+    </a>
+    {% endfor %}
+</div>
+
+{% if stories %}
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Genre</th>
+            <th>Status</th>
+            <th>Revisions</th>
+            <th>Created</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for s in stories %}
+        <tr>
+            <td><a href="/stories/{{ s.story_id }}">{{ s.story_id }}</a></td>
+            <td>{{ s.title or "Untitled" }}</td>
+            <td>{{ s.prompt.genre if s.prompt else "—" }}</td>
+            <td><span class="badge badge-{{ s.status.value | lower }}">{{ s.status.value }}</span></td>
+            <td>{{ s.revision_count }}</td>
+            <td>{{ s.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="empty-state">No stories found.</p>
+{% endif %}
+{% endblock %}

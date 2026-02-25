@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Pipeline - AI Publishing House{% endblock %}
+{% block content %}
+<h1>Pipeline Overview</h1>
+
+<form action="/api/pipeline/trigger" method="post" style="margin-bottom: 2rem;">
+    <textarea name="user_prompt" rows="3" placeholder="Optional: describe your story idea (leave empty for a random prompt)" class="prompt-input"></textarea>
+    <button type="submit" class="btn btn-primary">Trigger New Story</button>
+</form>
+
+<h2>Stage Counts</h2>
+<div class="stage-grid">
+    {% for status in ["PROMPT_CREATED", "DRAFT_WRITTEN", "IN_REVIEW", "REVISION_NEEDED", "REVISED", "APPROVED", "PUBLISHED"] %}
+    <div class="stage-card">
+        <div class="stage-count">{{ counts.get(status, 0) }}</div>
+        <div class="stage-label">{{ status.replace("_", " ") }}</div>
+    </div>
+    {% endfor %}
+</div>
+
+<h2>Active Stories</h2>
+{% if stories %}
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Status</th>
+            <th>Revisions</th>
+            <th>Time</th>
+            <th>Tokens</th>
+            <th>Updated</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for s in stories %}
+        <tr>
+            <td><a href="/stories/{{ s.story_id }}">{{ s.story_id }}</a></td>
+            <td>{{ s.title or "Untitled" }}</td>
+            <td><span class="badge badge-{{ s.status.value | lower }}">{{ s.status.value }}</span></td>
+            <td>{{ s.revision_count }}</td>
+            <td>{{ "%.0f" | format(s.total_duration_seconds) }}s</td>
+            <td>{{ "{:,}".format(s.total_tokens) }}</td>
+            <td>{{ s.updated_at.strftime('%Y-%m-%d %H:%M') }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="empty-state">No stories yet. Click "Trigger New Story" to start.</p>
+{% endif %}
+{% endblock %}

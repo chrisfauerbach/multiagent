@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Agent Activity - AI Publishing House{% endblock %}
+{% block content %}
+<h1>Agent Activity Log</h1>
+
+{% if logs %}
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>Timestamp</th>
+            <th>Agent</th>
+            <th>Story</th>
+            <th>Action</th>
+            <th>Detail</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for log in logs %}
+        <tr>
+            <td class="timestamp">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+            <td><span class="agent-name agent-{{ log.agent_name }}">{{ log.agent_name }}</span></td>
+            <td>
+                {% if log.story_id %}
+                <a href="/stories/{{ log.story_id }}">{{ log.story_id }}</a>
+                {% else %}
+                —
+                {% endif %}
+            </td>
+            <td>{{ log.action }}</td>
+            <td class="detail-cell">{{ log.detail }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="empty-state">No activity recorded yet.</p>
+{% endif %}
+{% endblock %}

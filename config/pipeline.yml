@@ -1,0 +1,21 @@
+pipeline:
+  max_revisions: 3
+  review_mode: sequential  # sequential or parallel
+  queue_timeout: 30        # BRPOP timeout in seconds
+  agent_loop_interval: 1   # seconds between loop iterations
+
+ollama:
+  base_url: "http://ollama:11434"
+  model: "deepseek-r1:8b"
+  timeout: 300
+  max_retries: 3
+  retry_wait: 5
+
+redis:
+  host: "redis"
+  port: 6379
+  db: 0
+
+elasticsearch:
+  hosts:
+    - "http://elasticsearch:9200"

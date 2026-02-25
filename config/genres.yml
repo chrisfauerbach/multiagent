@@ -1,0 +1,50 @@
+genres:
+  - name: science_fiction
+    description: "Stories exploring futuristic technology, space, or alternate realities"
+    themes:
+      - "first contact with alien life"
+      - "artificial intelligence gaining consciousness"
+      - "time travel paradox"
+      - "colony ship generations"
+    word_count_min: 800
+    word_count_max: 1500
+
+  - name: fantasy
+    description: "Stories with magic, mythical creatures, or supernatural elements"
+    themes:
+      - "a reluctant hero discovers hidden powers"
+      - "an ancient prophecy comes to fruition"
+      - "a deal with a trickster spirit"
+      - "the last dragon and its keeper"
+    word_count_min: 800
+    word_count_max: 1500
+
+  - name: mystery
+    description: "Stories centered on solving a puzzle or crime"
+    themes:
+      - "a locked-room murder at a dinner party"
+      - "a missing person in a small town"
+      - "a stolen artifact with a hidden message"
+      - "an anonymous letter that changes everything"
+    word_count_min: 800
+    word_count_max: 1500
+
+  - name: literary_fiction
+    description: "Character-driven stories exploring the human condition"
+    themes:
+      - "reconnecting with estranged family"
+      - "a life-changing encounter with a stranger"
+      - "the weight of an unspoken secret"
+      - "finding meaning in mundane routine"
+    word_count_min: 600
+    word_count_max: 1200
+
+  - name: horror
+    description: "Stories designed to frighten, unsettle, or create dread"
+    themes:
+      - "something wrong with the new house"
+      - "a childhood fear that turns out to be real"
+      - "an object that should not exist"
+      - "the last broadcast from a research station"
+    word_count_min: 600
+    word_count_max: 1200
