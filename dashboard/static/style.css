@@ -308,3 +308,24 @@ details summary {
     0% { background: rgba(108, 92, 231, 0.3); }
     100% { background: transparent; }
 }
+
+/* Diff view */
+.diff-view {
+    white-space: pre-wrap;
+    line-height: 1.8;
+    font-size: 0.95rem;
+}
+.diff-view ins {
+    background: rgba(46, 204, 113, 0.2);
+    color: var(--success);
+    text-decoration: none;
+    padding: 0.1rem 0.2rem;
+    border-radius: 2px;
+}
+.diff-view del {
+    background: rgba(231, 76, 60, 0.2);
+    color: var(--danger);
+    text-decoration: line-through;
+    padding: 0.1rem 0.2rem;
+    border-radius: 2px;
+}

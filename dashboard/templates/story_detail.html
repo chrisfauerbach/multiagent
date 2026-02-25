@@ -114,16 +114,16 @@
 </section>
 {% endif %}
 
-{% if story.revisions %}
+{% if revision_diffs %}
 <section class="section">
     <h2>Revision History</h2>
-    {% for rev in story.revisions %}
+    {% for d in revision_diffs %}
     <details class="card">
-        <summary>Revision {{ rev.round_number }} &mdash; {{ rev.timestamp.strftime('%Y-%m-%d %H:%M') }}</summary>
+        <summary>{{ d.label }} &mdash; {{ d.timestamp.strftime('%Y-%m-%d %H:%M') }}</summary>
         <p><strong>Feedback addressed:</strong></p>
-        <pre class="feedback-text">{{ rev.feedback_addressed }}</pre>
-        <p><strong>Revised text:</strong></p>
-        <div class="story-text">{{ rev.content }}</div>
+        <pre class="feedback-text">{{ d.feedback_addressed }}</pre>
+        <p><strong>Changes:</strong></p>
+        <div class="diff-view">{{ d.diff_html }}</div>
     </details>
     {% endfor %}
 </section>
