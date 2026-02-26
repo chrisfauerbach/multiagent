@@ -413,3 +413,24 @@ details summary {
     padding: 0.1rem 0.2rem;
     border-radius: 2px;
 }
+
+/* PDF bulk download toolbar */
+.pdf-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.6rem 1rem;
+    margin-bottom: 1rem;
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+.pdf-toolbar.hidden { display: none; }
+
+.col-check { width: 32px; text-align: center; }
+.col-check input[type="checkbox"] {
+    accent-color: var(--accent);
+    cursor: pointer;
+}

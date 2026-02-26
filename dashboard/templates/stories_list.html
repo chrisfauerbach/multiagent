@@ -13,9 +13,14 @@
 </div>
 
 {% if stories %}
+<div id="pdf-toolbar" class="pdf-toolbar hidden">
+    <span id="pdf-count">0 selected</span>
+    <button class="btn btn-primary" onclick="downloadSelected()">Download PDF</button>
+</div>
 <table class="data-table">
     <thead>
         <tr>
+            <th class="col-check"><input type="checkbox" id="select-all" onchange="toggleAll(this)"></th>
             <th>ID</th>
             <th>Title</th>
             <th>Genre</th>
@@ -27,6 +32,11 @@
     <tbody>
         {% for s in stories %}
         <tr>
+            <td class="col-check">
+                {% if s.current_draft %}
+                <input type="checkbox" class="story-check" value="{{ s.story_id }}" onchange="updateToolbar()">
+                {% endif %}
+            </td>
             <td><a href="/stories/{{ s.story_id }}">{{ s.story_id }}</a></td>
             <td>{{ s.title or "Untitled" }}</td>
             <td>{{ s.prompt.genre if s.prompt else "—" }}</td>
@@ -37,6 +47,29 @@
         {% endfor %}
     </tbody>
 </table>
+<script>
+function toggleAll(master) {
+    document.querySelectorAll(".story-check").forEach(function(cb) { cb.checked = master.checked; });
+    updateToolbar();
+}
+function updateToolbar() {
+    var checked = document.querySelectorAll(".story-check:checked");
+    var toolbar = document.getElementById("pdf-toolbar");
+    var count = document.getElementById("pdf-count");
+    if (checked.length > 0) {
+        toolbar.classList.remove("hidden");
+        count.textContent = checked.length + " selected";
+    } else {
+        toolbar.classList.add("hidden");
+    }
+}
+function downloadSelected() {
+    var ids = Array.from(document.querySelectorAll(".story-check:checked")).map(function(cb) { return cb.value; });
+    if (ids.length === 0) return;
+    var params = ids.map(function(id) { return "ids=" + encodeURIComponent(id); }).join("&");
+    window.location.href = "/api/stories/pdf?" + params;
+}
+</script>
 {% else %}
 <p class="empty-state">No stories found.</p>
 {% endif %}

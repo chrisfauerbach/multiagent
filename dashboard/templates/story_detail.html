@@ -14,6 +14,9 @@
     <span>Genre: {{ story.prompt.genre }}</span>
     <span>Target: {{ story.prompt.target_word_count }} words</span>
     {% endif %}
+    {% if story.current_draft %}
+    <a href="/stories/{{ story.story_id }}/pdf" class="btn btn-primary">Download PDF</a>
+    {% endif %}
 </div>
 
 {% set status = story.status.value %}
