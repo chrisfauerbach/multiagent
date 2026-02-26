@@ -16,6 +16,30 @@
     {% endif %}
 </div>
 
+{% set status = story.status.value %}
+{% set review_statuses = ["IN_REVIEW", "REVISION_NEEDED", "REVISED"] %}
+{% set steps = [
+    {"key": "prompt",    "label": "Prompt",    "reached": true},
+    {"key": "draft",     "label": "Draft",     "reached": status != "PROMPT_CREATED"},
+    {"key": "review",    "label": "Review",    "reached": status in review_statuses or status in ["APPROVED", "PUBLISHED"]},
+    {"key": "approved",  "label": "Approved",  "reached": status in ["APPROVED", "PUBLISHED"]},
+    {"key": "published", "label": "Published", "reached": status == "PUBLISHED"},
+] %}
+{% set active_key = "review" if status in review_statuses else
+       "prompt" if status == "PROMPT_CREATED" else
+       "draft" if status == "DRAFT_WRITTEN" else
+       "approved" if status == "APPROVED" else
+       "published" if status == "PUBLISHED" else "prompt" %}
+<div class="pipeline-progress">
+    {% for step in steps %}
+    <div class="pp-step{% if step.reached %} reached{% endif %}{% if step.key == active_key %} active{% endif %}">
+        <div class="pp-dot"></div>
+        <div class="pp-label">{{ step.label }}{% if step.key == "review" and story.revision_count > 0 %} <span class="pp-round">r{{ story.revision_count }}</span>{% endif %}</div>
+    </div>
+    {% if not loop.last %}<div class="pp-connector{% if steps[loop.index].reached %} reached{% endif %}"></div>{% endif %}
+    {% endfor %}
+</div>
+
 {% if story.metrics %}
 <section class="section">
     <h2>Performance Metrics</h2>
