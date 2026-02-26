@@ -24,6 +24,7 @@
             <th>ID</th>
             <th>Title</th>
             <th>Genre / Theme</th>
+            <th>Model</th>
             <th>Status</th>
             <th>Revisions</th>
             <th>Created</th>
@@ -45,6 +46,7 @@
                 {% if s.prompt.theme %}<span class="tag tag-theme">{{ s.prompt.theme }}</span>{% endif %}
                 {% else %}—{% endif %}
             </td>
+            <td class="detail-cell">{{ s.model or "—" }}</td>
             <td><span class="badge badge-{{ s.status.value | lower }}">{{ s.status.value }}</span></td>
             <td>{{ s.revision_count }}</td>
             <td>{{ s.created_at.strftime('%Y-%m-%d %H:%M') }}</td>

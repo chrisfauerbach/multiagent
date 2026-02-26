@@ -26,6 +26,7 @@ class PromptGeneratorAgent(BaseAgent):
 
         story_id = message.story_id
         user_idea = message.payload.get("user_prompt", "")
+        model = message.payload.get("model", "")
         self.log_activity("generating_prompt", f"Creating prompt for story {story_id}", story_id)
 
         genre = random.choice(self.genres_config["genres"])
@@ -50,7 +51,7 @@ class PromptGeneratorAgent(BaseAgent):
             )
 
         t0 = time.monotonic()
-        result = generate(user_prompt, self.system_prompt)
+        result = generate(user_prompt, self.system_prompt, model=model)
         elapsed = time.monotonic() - t0
 
         writing_prompt = WritingPrompt(
@@ -64,6 +65,7 @@ class PromptGeneratorAgent(BaseAgent):
 
         story = Story(
             story_id=story_id,
+            model=model,
             status=StoryStatus.PROMPT_CREATED,
             prompt=writing_prompt,
             max_revisions=self.config["pipeline"]["max_revisions"],

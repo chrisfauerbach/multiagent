@@ -5,7 +5,19 @@
 
 <form action="/api/pipeline/trigger" method="post" style="margin-bottom: 2rem;">
     <textarea name="user_prompt" rows="3" placeholder="Optional: describe your story idea (leave empty for a random prompt)" class="prompt-input"></textarea>
-    <button type="submit" class="btn btn-primary">Trigger New Story</button>
+    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+        <select name="model" class="model-select">
+            {% for m in models %}
+            <option value="{{ m.name }}" {% if m.name == default_model %}selected{% endif %}>
+                {{ m.name }} ({{ m.size_gb }} GB)
+            </option>
+            {% endfor %}
+            {% if not models %}
+            <option value="">No models found</option>
+            {% endif %}
+        </select>
+        <button type="submit" class="btn btn-primary">Trigger New Story</button>
+    </div>
 </form>
 
 <h2>Stage Counts</h2>
@@ -26,6 +38,7 @@
             <th>ID</th>
             <th>Title</th>
             <th>Genre / Theme</th>
+            <th>Model</th>
             <th>Status</th>
             <th>Revisions</th>
             <th>Time</th>
@@ -45,6 +58,7 @@
                 {% if s.prompt.theme %}<span class="tag tag-theme">{{ s.prompt.theme }}</span>{% endif %}
                 {% else %}—{% endif %}
             </td>
+            <td class="detail-cell">{{ s.model or "—" }}</td>
             <td><span class="badge badge-{{ s.status.value | lower }}">{{ s.status.value }}</span></td>
             <td>{{ s.revision_count }}</td>
             <td>{{ "%.0f" | format(s.total_duration_seconds) }}s</td>

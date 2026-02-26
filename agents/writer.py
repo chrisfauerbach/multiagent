@@ -42,7 +42,7 @@ class WriterAgent(BaseAgent):
         )
 
         t0 = time.monotonic()
-        result = generate(user_prompt, self.system_prompt)
+        result = generate(user_prompt, self.system_prompt, model=story.model)
         elapsed = time.monotonic() - t0
 
         story.current_draft = result.text
@@ -85,7 +85,7 @@ class WriterAgent(BaseAgent):
         )
 
         t0 = time.monotonic()
-        result = generate(user_prompt, self.system_prompt)
+        result = generate(user_prompt, self.system_prompt, model=story.model)
         elapsed = time.monotonic() - t0
 
         story.revisions.append(

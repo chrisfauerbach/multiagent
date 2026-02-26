@@ -72,6 +72,21 @@ h2 { margin-bottom: 0.75rem; font-size: 1.2rem; color: var(--text-muted); }
 .prompt-input::placeholder { color: var(--text-muted); }
 .prompt-input:focus { outline: none; border-color: var(--accent); }
 
+/* Model selector */
+.model-select {
+    padding: 0.5rem 0.8rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+    min-width: 200px;
+}
+.model-select:focus { outline: none; border-color: var(--accent); }
+.model-select option { background: var(--surface); color: var(--text); }
+
 /* Buttons */
 .btn {
     display: inline-block;

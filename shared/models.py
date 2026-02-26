@@ -67,6 +67,7 @@ class Revision(BaseModel):
 class Story(BaseModel):
     story_id: str = Field(default_factory=lambda: uuid.uuid4().hex[:12])
     title: str = ""
+    model: str = ""
     status: StoryStatus = StoryStatus.PROMPT_CREATED
     prompt: WritingPrompt | None = None
     current_draft: str = ""

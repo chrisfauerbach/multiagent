@@ -10,6 +10,7 @@
     <span class="badge badge-{{ story.status.value | lower }}">{{ story.status.value }}</span>
     <span>ID: {{ story.story_id }}</span>
     <span>Revisions: {{ story.revision_count }}/{{ story.max_revisions }}</span>
+    {% if story.model %}<span>Model: {{ story.model }}</span>{% endif %}
     {% if story.prompt %}
     <span>Genre: {{ story.prompt.genre }}</span>
     <span>Target: {{ story.prompt.target_word_count }} words</span>

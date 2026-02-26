@@ -40,11 +40,14 @@ class EditorInChiefAgent(BaseAgent):
     def _handle_start_new_story(self, message: AgentMessage) -> None:
         story_id = message.story_id or uuid.uuid4().hex[:12]
         user_prompt = message.payload.get("user_prompt", "")
-        self.log_activity("starting_story", f"Initiating new story {story_id}", story_id)
+        model = message.payload.get("model", "")
+        self.log_activity("starting_story", f"Initiating new story {story_id}" + (f" (model={model})" if model else ""), story_id)
 
         payload = {}
         if user_prompt:
             payload["user_prompt"] = user_prompt
+        if model:
+            payload["model"] = model
 
         enqueue_message(
             self.redis,
@@ -261,7 +264,7 @@ class EditorInChiefAgent(BaseAgent):
             f"Summarize the top priority fixes for the writer. Be concise."
         )
         t0 = time.monotonic()
-        result = generate(eval_prompt, self.system_prompt)
+        result = generate(eval_prompt, self.system_prompt, model=story.model)
         elapsed = time.monotonic() - t0
         self.record_metrics(story, "evaluate_feedback", elapsed, result.usage, round_number)
 

@@ -37,7 +37,7 @@ class EditorAgent(BaseAgent):
         )
 
         t0 = time.monotonic()
-        result = generate(user_prompt, self.system_prompt)
+        result = generate(user_prompt, self.system_prompt, model=story.model)
         elapsed = time.monotonic() - t0
 
         feedback_text = result.text

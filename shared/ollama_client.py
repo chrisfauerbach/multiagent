@@ -29,12 +29,12 @@ def _strip_thinking_tags(text: str) -> str:
         "ollama_retry", attempt=retry_state.attempt_number
     ),
 )
-def generate(prompt: str, system_prompt: str = "") -> GenerateResult:
+def generate(prompt: str, system_prompt: str = "", model: str = "") -> GenerateResult:
     config = _get_ollama_config()
     url = f"{config['base_url']}/api/generate"
 
     payload = {
-        "model": config["model"],
+        "model": model or config["model"],
         "prompt": prompt,
         "stream": False,
     }

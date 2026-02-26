@@ -13,6 +13,7 @@ STORIES_MAPPING = {
         "properties": {
             "story_id": {"type": "keyword"},
             "title": {"type": "text"},
+            "model": {"type": "keyword"},
             "status": {"type": "keyword"},
             "prompt": {
                 "type": "object",
