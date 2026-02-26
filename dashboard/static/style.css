@@ -414,6 +414,26 @@ details summary {
     border-radius: 2px;
 }
 
+/* Genre / theme tags */
+.tag {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    margin: 0.1rem 0.2rem 0.1rem 0;
+    white-space: nowrap;
+}
+.tag-genre {
+    background: rgba(108, 92, 231, 0.15);
+    color: var(--accent);
+    font-weight: 600;
+    text-transform: capitalize;
+}
+.tag-theme {
+    background: rgba(52, 152, 219, 0.15);
+    color: var(--info);
+}
+
 /* PDF bulk download toolbar */
 .pdf-toolbar {
     display: flex;

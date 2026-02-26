@@ -25,6 +25,7 @@
         <tr>
             <th>ID</th>
             <th>Title</th>
+            <th>Genre / Theme</th>
             <th>Status</th>
             <th>Revisions</th>
             <th>Time</th>
@@ -38,6 +39,12 @@
         <tr>
             <td><a href="/stories/{{ s.story_id }}">{{ s.story_id }}</a></td>
             <td>{{ s.title or "Untitled" }}</td>
+            <td>
+                {% if s.prompt %}
+                <span class="tag tag-genre">{{ s.prompt.genre.replace("_", " ") }}</span>
+                {% if s.prompt.theme %}<span class="tag tag-theme">{{ s.prompt.theme }}</span>{% endif %}
+                {% else %}—{% endif %}
+            </td>
             <td><span class="badge badge-{{ s.status.value | lower }}">{{ s.status.value }}</span></td>
             <td>{{ s.revision_count }}</td>
             <td>{{ "%.0f" | format(s.total_duration_seconds) }}s</td>
