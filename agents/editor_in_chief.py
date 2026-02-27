@@ -6,7 +6,7 @@ from collections import deque
 
 from shared import constants
 from shared.config_loader import load_prompt
-from shared.elasticsearch_client import get_story, save_story
+from shared.elasticsearch_client import get_story, list_in_progress_stories, save_story
 from shared.models import AgentMessage, Story, StoryStatus
 from shared.ollama_client import generate
 from shared.redis_client import enqueue_message
@@ -25,6 +25,117 @@ class EditorInChiefAgent(BaseAgent):
         self._story_queue: deque[AgentMessage] = deque()
         # Track pending reviews per story: {story_id: {"reviewer": ..., "editor": ...}}
         self._pending_feedback: dict[str, dict] = {}
+
+    # --- Restart recovery ---
+
+    def run(self) -> None:
+        self._recover_from_elasticsearch()
+        super().run()
+
+    def _recover_from_elasticsearch(self) -> None:
+        stories = list_in_progress_stories(self.es)
+        if not stories:
+            self.logger.info("recovery_skipped", reason="no in-progress stories")
+            return
+
+        queued: list[Story] = []
+        active: list[Story] = []
+        for s in stories:
+            if s.status == StoryStatus.QUEUED:
+                queued.append(s)
+            else:
+                active.append(s)
+
+        self.logger.info(
+            "recovery_starting",
+            total=len(stories),
+            active=len(active),
+            queued=len(queued),
+        )
+        self.log_activity(
+            "recovery_starting",
+            f"Recovering {len(active)} active + {len(queued)} queued stories",
+        )
+
+        # Restore active stories first (they keep their concurrency slots)
+        for story in active:
+            self._active_stories.add(story.story_id)
+            self._recover_story(story)
+
+        # Restore queued stories: dispatch if slots available, else buffer
+        for story in queued:
+            msg = self._story_to_start_message(story)
+            if len(self._active_stories) < self._max_concurrent:
+                self._dispatch_new_story(msg)
+            else:
+                self._story_queue.append(msg)
+
+        self.logger.info(
+            "recovery_complete",
+            active=len(self._active_stories),
+            queued=len(self._story_queue),
+        )
+        self.log_activity(
+            "recovery_complete",
+            f"{len(self._active_stories)} active, {len(self._story_queue)} queued",
+        )
+
+    def _recover_story(self, story: Story) -> None:
+        sid = story.story_id
+        status = story.status
+
+        if status == StoryStatus.PROMPT_CREATED:
+            self.log_activity("recovery_dispatch", "Re-sending to writer", sid)
+            enqueue_message(
+                self.redis,
+                constants.QUEUE_WRITER,
+                AgentMessage(
+                    story_id=sid,
+                    action=constants.ACTION_WRITE_DRAFT,
+                    source=self.agent_name,
+                    target="writer",
+                ),
+            )
+
+        elif status == StoryStatus.DRAFT_WRITTEN:
+            story.status = StoryStatus.IN_REVIEW
+            save_story(self.es, story)
+            round_number = story.revision_count + 1
+            self.log_activity("recovery_dispatch", f"Draft written -> review round {round_number}", sid)
+            self._send_for_review(sid, round_number)
+
+        elif status == StoryStatus.IN_REVIEW:
+            round_number = story.revision_count + 1
+            self.log_activity("recovery_dispatch", f"Re-sending for review round {round_number}", sid)
+            self._send_for_review(sid, round_number)
+
+        elif status == StoryStatus.REVISION_NEEDED:
+            round_number = story.revision_count + 1
+            self.log_activity("recovery_dispatch", f"Revision needed -> re-sending for review round {round_number}", sid)
+            self._send_for_review(sid, round_number)
+
+        elif status == StoryStatus.REVISED:
+            story.status = StoryStatus.IN_REVIEW
+            save_story(self.es, story)
+            round_number = story.revision_count + 1
+            self.log_activity("recovery_dispatch", f"Revised -> review round {round_number}", sid)
+            self._send_for_review(sid, round_number)
+
+        elif status in (StoryStatus.APPROVED, StoryStatus.DESIGNING_COVER):
+            self.log_activity("recovery_dispatch", "Re-sending for cover design", sid)
+            self._send_for_cover_design(story)
+
+        else:
+            self.logger.warning("recovery_unknown_status", story_id=sid, status=status)
+
+    def _story_to_start_message(self, story: Story) -> AgentMessage:
+        payload = story.trigger_payload if story.trigger_payload else {"model": story.model}
+        return AgentMessage(
+            story_id=story.story_id,
+            action=constants.ACTION_START_NEW_STORY,
+            payload=payload,
+            source=self.agent_name,
+        )
 
     def handle_message(self, message: AgentMessage) -> None:
         handlers = {
@@ -56,6 +167,7 @@ class EditorInChiefAgent(BaseAgent):
                 model=message.payload.get("model", ""),
                 status=StoryStatus.QUEUED,
                 max_revisions=self.config["pipeline"]["max_revisions"],
+                trigger_payload=message.payload,
             )
             save_story(self.es, queued_story)
             self.log_activity(
@@ -72,6 +184,7 @@ class EditorInChiefAgent(BaseAgent):
         story_id = message.story_id
         user_prompt = message.payload.get("user_prompt", "")
         model = message.payload.get("model", "")
+        genre = message.payload.get("genre", "")
         self._active_stories.add(story_id)
         self.log_activity("starting_story", f"Initiating new story {story_id}" + (f" (model={model})" if model else ""), story_id)
 
@@ -80,6 +193,8 @@ class EditorInChiefAgent(BaseAgent):
             payload["user_prompt"] = user_prompt
         if model:
             payload["model"] = model
+        if genre:
+            payload["genre"] = genre
 
         enqueue_message(
             self.redis,

@@ -47,6 +47,22 @@ def list_stories(es: Elasticsearch, status: str | None = None, size: int = 50) -
         return []
 
 
+def list_in_progress_stories(es: Elasticsearch, size: int = 200) -> list[Story]:
+    """Return all non-PUBLISHED stories, oldest first (for restart recovery)."""
+    query = {"bool": {"must_not": [{"term": {"status": "PUBLISHED"}}]}}
+    try:
+        result = es.search(
+            index=STORIES_INDEX,
+            query=query,
+            sort=[{"created_at": {"order": "asc"}}],
+            size=size,
+        )
+        return [Story.model_validate(hit["_source"]) for hit in result["hits"]["hits"]]
+    except Exception:
+        logger.error("list_in_progress_stories_failed")
+        return []
+
+
 def get_pipeline_counts(es: Elasticsearch) -> dict[str, int]:
     try:
         result = es.search(

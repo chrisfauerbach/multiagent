@@ -66,6 +66,7 @@ STORIES_MAPPING = {
             "total_prompt_tokens": {"type": "integer"},
             "total_completion_tokens": {"type": "integer"},
             "total_tokens": {"type": "integer"},
+            "trigger_payload": {"type": "object", "enabled": False},
             "created_at": {"type": "date"},
             "updated_at": {"type": "date"},
         }
