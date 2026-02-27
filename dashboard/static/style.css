@@ -155,6 +155,7 @@ h2 { margin-bottom: 0.75rem; font-size: 1.2rem; color: var(--text-muted); }
     font-weight: 600;
     text-transform: uppercase;
 }
+.badge-queued { background: #2d2d3a; color: #636e8a; }
 .badge-prompt_created { background: #2d3748; color: #a0aec0; }
 .badge-draft_written { background: #2c3e50; color: #74b9ff; }
 .badge-in_review { background: #1a3a4a; color: var(--info); }

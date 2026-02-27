@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 
 
 class StoryStatus(str, Enum):
+    QUEUED = "QUEUED"
     PROMPT_CREATED = "PROMPT_CREATED"
     DRAFT_WRITTEN = "DRAFT_WRITTEN"
     IN_REVIEW = "IN_REVIEW"

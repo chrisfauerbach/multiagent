@@ -1,5 +1,6 @@
 pipeline:
   max_revisions: 3
+  max_concurrent_stories: 1  # how many stories run in parallel (1 = fully serial)
   review_mode: sequential  # sequential or parallel
   queue_timeout: 30        # BRPOP timeout in seconds
   agent_loop_interval: 1   # seconds between loop iterations

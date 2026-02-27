@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import time
 import uuid
+from collections import deque
 
 from shared import constants
 from shared.config_loader import load_prompt
 from shared.elasticsearch_client import get_story, save_story
-from shared.models import AgentMessage, StoryStatus
+from shared.models import AgentMessage, Story, StoryStatus
 from shared.ollama_client import generate
 from shared.redis_client import enqueue_message
 
@@ -17,6 +18,11 @@ class EditorInChiefAgent(BaseAgent):
     def __init__(self):
         super().__init__("orchestrator", constants.QUEUE_ORCHESTRATOR)
         self.system_prompt = load_prompt("editor_in_chief")
+        self._max_concurrent = self.config["pipeline"].get("max_concurrent_stories", 1)
+        # Stories currently in the pipeline (not yet published)
+        self._active_stories: set[str] = set()
+        # Buffered start_new_story messages waiting for a slot
+        self._story_queue: deque[AgentMessage] = deque()
         # Track pending reviews per story: {story_id: {"reviewer": ..., "editor": ...}}
         self._pending_feedback: dict[str, dict] = {}
 
@@ -39,9 +45,34 @@ class EditorInChiefAgent(BaseAgent):
     # --- Handlers ---
 
     def _handle_start_new_story(self, message: AgentMessage) -> None:
-        story_id = message.story_id or uuid.uuid4().hex[:12]
+        if not message.story_id:
+            message.story_id = uuid.uuid4().hex[:12]
+
+        if len(self._active_stories) >= self._max_concurrent:
+            self._story_queue.append(message)
+            # Persist a QUEUED story so the dashboard can see the backlog
+            queued_story = Story(
+                story_id=message.story_id,
+                model=message.payload.get("model", ""),
+                status=StoryStatus.QUEUED,
+                max_revisions=self.config["pipeline"]["max_revisions"],
+            )
+            save_story(self.es, queued_story)
+            self.log_activity(
+                "story_queued",
+                f"Story {message.story_id} queued ({len(self._story_queue)} waiting, "
+                f"{len(self._active_stories)} active)",
+                message.story_id,
+            )
+            return
+
+        self._dispatch_new_story(message)
+
+    def _dispatch_new_story(self, message: AgentMessage) -> None:
+        story_id = message.story_id
         user_prompt = message.payload.get("user_prompt", "")
         model = message.payload.get("model", "")
+        self._active_stories.add(story_id)
         self.log_activity("starting_story", f"Initiating new story {story_id}" + (f" (model={model})" if model else ""), story_id)
 
         payload = {}
@@ -324,6 +355,17 @@ class EditorInChiefAgent(BaseAgent):
             f"'{story.title}' published after {story.revision_count} revision(s)",
             story.story_id,
         )
+
+        # Release the concurrency slot and start next queued story
+        self._active_stories.discard(story.story_id)
+        if self._story_queue and len(self._active_stories) < self._max_concurrent:
+            next_msg = self._story_queue.popleft()
+            self.log_activity(
+                "story_dequeued",
+                f"Starting queued story {next_msg.story_id} ({len(self._story_queue)} still waiting)",
+                next_msg.story_id,
+            )
+            self._dispatch_new_story(next_msg)
 
 
 def main():

@@ -5,7 +5,7 @@
 
 <div class="filters">
     <a href="/stories" class="btn {% if not current_status %}btn-active{% endif %}">All</a>
-    {% for status in ["PROMPT_CREATED", "DRAFT_WRITTEN", "IN_REVIEW", "REVISION_NEEDED", "REVISED", "APPROVED", "DESIGNING_COVER", "PUBLISHED"] %}
+    {% for status in ["QUEUED", "PROMPT_CREATED", "DRAFT_WRITTEN", "IN_REVIEW", "REVISION_NEEDED", "REVISED", "APPROVED", "DESIGNING_COVER", "PUBLISHED"] %}
     <a href="/stories?status={{ status }}" class="btn {% if current_status == status %}btn-active{% endif %}">
         {{ status.replace("_", " ") }}
     </a>

@@ -23,19 +23,21 @@
 {% set status = story.status.value %}
 {% set review_statuses = ["IN_REVIEW", "REVISION_NEEDED", "REVISED"] %}
 {% set steps = [
-    {"key": "prompt",    "label": "Prompt",    "reached": true},
-    {"key": "draft",     "label": "Draft",     "reached": status != "PROMPT_CREATED"},
+    {"key": "queued",    "label": "Queued",    "reached": true},
+    {"key": "prompt",    "label": "Prompt",    "reached": status != "QUEUED"},
+    {"key": "draft",     "label": "Draft",     "reached": status not in ["QUEUED", "PROMPT_CREATED"]},
     {"key": "review",    "label": "Review",    "reached": status in review_statuses or status in ["APPROVED", "DESIGNING_COVER", "PUBLISHED"]},
     {"key": "approved",  "label": "Approved",  "reached": status in ["APPROVED", "DESIGNING_COVER", "PUBLISHED"]},
     {"key": "cover",     "label": "Cover",     "reached": status in ["DESIGNING_COVER", "PUBLISHED"]},
     {"key": "published", "label": "Published", "reached": status == "PUBLISHED"},
 ] %}
-{% set active_key = "review" if status in review_statuses else
+{% set active_key = "queued" if status == "QUEUED" else
+       "review" if status in review_statuses else
        "prompt" if status == "PROMPT_CREATED" else
        "draft" if status == "DRAFT_WRITTEN" else
        "approved" if status == "APPROVED" else
        "cover" if status == "DESIGNING_COVER" else
-       "published" if status == "PUBLISHED" else "prompt" %}
+       "published" if status == "PUBLISHED" else "queued" %}
 <div class="pipeline-progress">
     {% for step in steps %}
     <div class="pp-step{% if step.reached %} reached{% endif %}{% if step.key == active_key %} active{% endif %}">
