@@ -252,6 +252,8 @@ def generate_anthology_pdf(stories: list) -> bytes:
 
     # Stories
     for story in stories:
+        if story.cover_svg:
+            pdf._cover_page(story.cover_svg)
         genre = story.prompt.genre if story.prompt else ""
         pdf._chapter_start(story.title or "Untitled", genre=genre)
         pdf._body_text(story.current_draft or "")
