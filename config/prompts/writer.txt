@@ -15,4 +15,4 @@ When REVISING a draft:
 - Do not rewrite from scratch unless the feedback demands it
 - Preserve the story's voice and core vision
 
-Respond with ONLY the story text. Do not include meta-commentary, notes to the editor, or explanations. Just write the story.
+Always begin your response with the story title on its own line, followed by a blank line, then the story text. Do not include meta-commentary, notes to the editor, or explanations.

@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import io
-import re
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -16,20 +15,7 @@ except ImportError:
     _HAS_CAIROSVG = False
 
 
-def _sanitize_svg(svg: str) -> str:
-    """Fix common LLM issues in SVG markup before conversion."""
-    svg_open_match = re.match(r"<svg([^>]*?)>", svg, re.DOTALL)
-    if not svg_open_match:
-        return svg
-    attrs_raw = svg_open_match.group(1)
-    has_valid_xmlns = 'xmlns="http://www.w3.org/2000/svg"' in attrs_raw
-    vb_match = re.search(r'viewBox="(\d[\d\s.]+)"', attrs_raw)
-    if has_valid_xmlns and vb_match:
-        return svg
-    viewbox = vb_match.group(1) if vb_match else "0 0 600 900"
-    clean_open = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{viewbox}">'
-    body = svg[svg_open_match.end():]
-    return clean_open + body
+from shared.svg_utils import sanitize_svg as _sanitize_svg
 
 # Page geometry (mm)
 PAGE_W = 210

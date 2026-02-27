@@ -116,11 +116,17 @@ class WriterAgent(BaseAgent):
         )
 
     def _extract_title(self, draft: str, story) -> str:
-        first_line = draft.strip().split("\n")[0].strip()
-        # If the first line looks like a title (short, possibly with # markers)
-        cleaned = first_line.lstrip("#").strip().strip('"').strip("*")
-        if 2 < len(cleaned) < 80:
-            return cleaned
+        # Check the first few non-empty lines for a short title-like line
+        lines = draft.strip().split("\n")
+        for line in lines[:5]:
+            line = line.strip()
+            if not line:
+                continue
+            cleaned = line.lstrip("#").strip().strip('"').strip("*")
+            if 2 < len(cleaned) < 80:
+                return cleaned
+            # First non-empty line is too long — not a title
+            break
         return f"Untitled {story.prompt.genre.replace('_', ' ').title()} Story"
 
 

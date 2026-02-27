@@ -4,6 +4,7 @@ import re
 import time
 
 from shared import constants
+from shared.svg_utils import sanitize_svg
 from shared.config_loader import load_prompt
 from shared.elasticsearch_client import get_story, save_story
 from shared.models import AgentMessage, StoryStatus
@@ -91,33 +92,8 @@ class CoverDesignerAgent(BaseAgent):
         if not match:
             return self._FALLBACK_SVG
         svg = match.group(1)
-        svg = self._sanitize_svg(svg)
+        svg = sanitize_svg(svg)
         return svg
-
-    @staticmethod
-    def _sanitize_svg(svg: str) -> str:
-        """Fix common LLM issues in SVG markup."""
-        # Fix mangled opening <svg ...> tag: LLMs sometimes inject commentary
-        # inside attributes. Rebuild the tag with clean attributes.
-        svg_open_match = re.match(r"<svg([^>]*?)>", svg, re.DOTALL)
-        if not svg_open_match:
-            return svg
-        attrs_raw = svg_open_match.group(1)
-        # Check if xmlns is present and well-formed
-        has_valid_xmlns = 'xmlns="http://www.w3.org/2000/svg"' in attrs_raw
-        # Check if viewBox is present and well-formed
-        vb_match = re.search(r'viewBox="(\d[\d\s.]+)"', attrs_raw)
-        has_valid_viewbox = vb_match is not None
-
-        if has_valid_xmlns and has_valid_viewbox:
-            return svg  # Opening tag looks fine
-
-        # Rebuild the opening tag with known-good attributes
-        viewbox = vb_match.group(1) if vb_match else "0 0 600 900"
-        clean_open = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{viewbox}">'
-        # Replace the original opening tag
-        body = svg[svg_open_match.end():]
-        return clean_open + body
 
 
 def main():
