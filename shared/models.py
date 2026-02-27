@@ -15,6 +15,7 @@ class StoryStatus(str, Enum):
     REVISION_NEEDED = "REVISION_NEEDED"
     REVISED = "REVISED"
     APPROVED = "APPROVED"
+    DESIGNING_COVER = "DESIGNING_COVER"
     PUBLISHED = "PUBLISHED"
 
 
@@ -75,6 +76,7 @@ class Story(BaseModel):
     feedback: list[FeedbackItem] = Field(default_factory=list)
     revision_count: int = 0
     max_revisions: int = 3
+    cover_svg: str = ""
     metrics: list[AgentMetrics] = Field(default_factory=list)
     total_duration_seconds: float = 0.0
     total_prompt_tokens: int = 0

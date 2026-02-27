@@ -22,7 +22,7 @@
 
 <h2>Stage Counts</h2>
 <div class="stage-grid">
-    {% for status in ["PROMPT_CREATED", "DRAFT_WRITTEN", "IN_REVIEW", "REVISION_NEEDED", "REVISED", "APPROVED", "PUBLISHED"] %}
+    {% for status in ["PROMPT_CREATED", "DRAFT_WRITTEN", "IN_REVIEW", "REVISION_NEEDED", "REVISED", "APPROVED", "DESIGNING_COVER", "PUBLISHED"] %}
     <div class="stage-card">
         <div class="stage-count">{{ counts.get(status, 0) }}</div>
         <div class="stage-label">{{ status.replace("_", " ") }}</div>

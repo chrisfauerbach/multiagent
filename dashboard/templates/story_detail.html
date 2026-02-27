@@ -25,14 +25,16 @@
 {% set steps = [
     {"key": "prompt",    "label": "Prompt",    "reached": true},
     {"key": "draft",     "label": "Draft",     "reached": status != "PROMPT_CREATED"},
-    {"key": "review",    "label": "Review",    "reached": status in review_statuses or status in ["APPROVED", "PUBLISHED"]},
-    {"key": "approved",  "label": "Approved",  "reached": status in ["APPROVED", "PUBLISHED"]},
+    {"key": "review",    "label": "Review",    "reached": status in review_statuses or status in ["APPROVED", "DESIGNING_COVER", "PUBLISHED"]},
+    {"key": "approved",  "label": "Approved",  "reached": status in ["APPROVED", "DESIGNING_COVER", "PUBLISHED"]},
+    {"key": "cover",     "label": "Cover",     "reached": status in ["DESIGNING_COVER", "PUBLISHED"]},
     {"key": "published", "label": "Published", "reached": status == "PUBLISHED"},
 ] %}
 {% set active_key = "review" if status in review_statuses else
        "prompt" if status == "PROMPT_CREATED" else
        "draft" if status == "DRAFT_WRITTEN" else
        "approved" if status == "APPROVED" else
+       "cover" if status == "DESIGNING_COVER" else
        "published" if status == "PUBLISHED" else "prompt" %}
 <div class="pipeline-progress">
     {% for step in steps %}
@@ -108,6 +110,15 @@
     <div class="card">
         <p><strong>Theme:</strong> {{ story.prompt.theme }}</p>
         <pre class="prompt-text">{{ story.prompt.setting }}</pre>
+    </div>
+</section>
+{% endif %}
+
+{% if story.cover_svg %}
+<section class="section">
+    <h2>Book Cover</h2>
+    <div class="cover-preview">
+        {{ story.cover_svg | safe }}
     </div>
 </section>
 {% endif %}

@@ -28,6 +28,7 @@ class EditorInChiefAgent(BaseAgent):
             constants.ACTION_REVIEW_COMPLETE: self._handle_review_complete,
             constants.ACTION_EDIT_COMPLETE: self._handle_edit_complete,
             constants.ACTION_REVISION_READY: self._handle_revision_ready,
+            constants.ACTION_COVER_READY: self._handle_cover_ready,
         }
         handler = handlers.get(message.action)
         if handler is None:
@@ -235,24 +236,24 @@ class EditorInChiefAgent(BaseAgent):
     ) -> None:
         story_id = story.story_id
 
-        # Both approve -> publish
+        # Both approve -> send for cover design
         if reviewer_approved and editor_approved:
             self.log_activity("story_approved", "Both reviewer and editor approved", story_id)
             story.status = StoryStatus.APPROVED
             save_story(self.es, story)
-            self._publish_story(story)
+            self._send_for_cover_design(story)
             return
 
-        # Max revisions reached -> publish anyway
+        # Max revisions reached -> send for cover design anyway
         if round_number >= story.max_revisions:
             self.log_activity(
                 "max_revisions_reached",
-                f"Publishing after {round_number} rounds",
+                f"Approved after {round_number} rounds, sending for cover design",
                 story_id,
             )
             story.status = StoryStatus.APPROVED
             save_story(self.es, story)
-            self._publish_story(story)
+            self._send_for_cover_design(story)
             return
 
         # Use LLM to summarize feedback for the writer
@@ -287,6 +288,33 @@ class EditorInChiefAgent(BaseAgent):
                 target="writer",
             ),
         )
+
+    def _send_for_cover_design(self, story) -> None:
+        story_id = story.story_id
+        self.log_activity("sending_for_cover", "Sending to cover designer", story_id)
+
+        story.status = StoryStatus.DESIGNING_COVER
+        save_story(self.es, story)
+
+        enqueue_message(
+            self.redis,
+            constants.QUEUE_COVER_DESIGNER,
+            AgentMessage(
+                story_id=story_id,
+                action=constants.ACTION_DESIGN_COVER,
+                source=self.agent_name,
+                target="cover_designer",
+            ),
+        )
+
+    def _handle_cover_ready(self, message: AgentMessage) -> None:
+        story_id = message.story_id
+        story = get_story(self.es, story_id)
+        if not story:
+            self.logger.error("story_not_found", story_id=story_id)
+            return
+        self.log_activity("cover_received", "Cover design received, publishing", story_id)
+        self._publish_story(story)
 
     def _publish_story(self, story) -> None:
         story.status = StoryStatus.PUBLISHED

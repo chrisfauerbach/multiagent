@@ -127,6 +127,20 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  cover-designer:
+    build:
+      context: .
+      dockerfile: Dockerfile.agent
+    environment:
+      - AGENT_MODULE=agents.cover_designer
+    env_file: .env
+    depends_on:
+      init-services:
+        condition: service_completed_successfully
+      ollama:
+        condition: service_healthy
+    restart: unless-stopped
+
   dashboard:
     build:
       context: .

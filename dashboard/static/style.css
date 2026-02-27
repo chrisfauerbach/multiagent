@@ -161,6 +161,7 @@ h2 { margin-bottom: 0.75rem; font-size: 1.2rem; color: var(--text-muted); }
 .badge-revision_needed { background: #3a2a1a; color: var(--warning); }
 .badge-revised { background: #2a3a2a; color: #81ecec; }
 .badge-approved { background: #1a3a2a; color: var(--success); }
+.badge-designing_cover { background: #2a2a3a; color: #e17055; }
 .badge-published { background: #2a1a3a; color: var(--accent); }
 
 /* Tables */
@@ -260,6 +261,7 @@ h2 { margin-bottom: 0.75rem; font-size: 1.2rem; color: var(--text-muted); }
 .agent-writer { color: #74b9ff; }
 .agent-reviewer { color: var(--warning); }
 .agent-editor { color: var(--success); }
+.agent-cover_designer { color: #e17055; }
 
 .empty-state {
     color: var(--text-muted);
@@ -468,4 +470,19 @@ details summary {
 .col-check input[type="checkbox"] {
     accent-color: var(--accent);
     cursor: pointer;
+}
+
+/* Cover preview */
+.cover-preview {
+    max-width: 300px;
+    margin: 0 auto;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+}
+.cover-preview svg {
+    width: 100%;
+    height: auto;
+    display: block;
 }

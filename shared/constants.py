@@ -4,6 +4,7 @@ QUEUE_PROMPT_GENERATOR = "queue:prompt_generator"
 QUEUE_WRITER = "queue:writer"
 QUEUE_REVIEWER = "queue:reviewer"
 QUEUE_EDITOR = "queue:editor"
+QUEUE_COVER_DESIGNER = "queue:cover_designer"
 
 # Redis activity
 ACTIVITY_LOG_KEY = "activity:log"
@@ -20,6 +21,7 @@ STATUS_IN_REVIEW = "IN_REVIEW"
 STATUS_REVISION_NEEDED = "REVISION_NEEDED"
 STATUS_REVISED = "REVISED"
 STATUS_APPROVED = "APPROVED"
+STATUS_DESIGNING_COVER = "DESIGNING_COVER"
 STATUS_PUBLISHED = "PUBLISHED"
 
 # Agent message actions
@@ -34,3 +36,5 @@ ACTION_EDIT = "edit"
 ACTION_EDIT_COMPLETE = "edit_complete"
 ACTION_REVISE = "revise"
 ACTION_REVISION_READY = "revision_ready"
+ACTION_DESIGN_COVER = "design_cover"
+ACTION_COVER_READY = "cover_ready"

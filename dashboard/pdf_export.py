@@ -2,10 +2,34 @@
 from __future__ import annotations
 
 import io
+import re
+import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
 from fpdf import FPDF
+
+try:
+    import cairosvg
+    _HAS_CAIROSVG = True
+except ImportError:
+    _HAS_CAIROSVG = False
+
+
+def _sanitize_svg(svg: str) -> str:
+    """Fix common LLM issues in SVG markup before conversion."""
+    svg_open_match = re.match(r"<svg([^>]*?)>", svg, re.DOTALL)
+    if not svg_open_match:
+        return svg
+    attrs_raw = svg_open_match.group(1)
+    has_valid_xmlns = 'xmlns="http://www.w3.org/2000/svg"' in attrs_raw
+    vb_match = re.search(r'viewBox="(\d[\d\s.]+)"', attrs_raw)
+    if has_valid_xmlns and vb_match:
+        return svg
+    viewbox = vb_match.group(1) if vb_match else "0 0 600 900"
+    clean_open = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{viewbox}">'
+    body = svg[svg_open_match.end():]
+    return clean_open + body
 
 # Page geometry (mm)
 PAGE_W = 210
@@ -101,6 +125,24 @@ class BookPDF(FPDF):
             self.set_font(FONT, "", 10)
             self.multi_cell(0, 7, year, align="C")
 
+    def _cover_page(self, cover_svg: str) -> bool:
+        """Render SVG cover as a full-page image. Returns True on success."""
+        if not _HAS_CAIROSVG or not cover_svg:
+            return False
+        try:
+            cover_svg = _sanitize_svg(cover_svg)
+            png_data = cairosvg.svg2png(bytestring=cover_svg.encode("utf-8"),
+                                        output_width=600, output_height=900)
+            with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
+                tmp.write(png_data)
+                tmp_path = tmp.name
+            self.add_page()
+            self.image(tmp_path, x=0, y=0, w=PAGE_W, h=PAGE_H)
+            Path(tmp_path).unlink(missing_ok=True)
+            return True
+        except Exception:
+            return False
+
     def _chapter_start(self, title: str, genre: str = ""):
         """Start a new chapter with a styled title."""
         self._chapter_title = title
@@ -160,11 +202,13 @@ def generate_single_story_pdf(story) -> bytes:
     year = story.created_at.strftime("%Y") if story.created_at else ""
     genre = story.prompt.genre if story.prompt else ""
 
-    pdf._title_page(
-        title=story.title or "Untitled",
-        subtitle=genre.replace("_", " ").title() if genre else "",
-        year=year,
-    )
+    # Use SVG cover as title page if available, otherwise text title page
+    if not (story.cover_svg and pdf._cover_page(story.cover_svg)):
+        pdf._title_page(
+            title=story.title or "Untitled",
+            subtitle=genre.replace("_", " ").title() if genre else "",
+            year=year,
+        )
 
     pdf._chapter_start(story.title or "Untitled", genre=genre)
     pdf._body_text(story.current_draft or "")

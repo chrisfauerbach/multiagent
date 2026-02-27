@@ -46,6 +46,7 @@ STORIES_MAPPING = {
                     "timestamp": {"type": "date"},
                 },
             },
+            "cover_svg": {"type": "text", "index": False},
             "revision_count": {"type": "integer"},
             "max_revisions": {"type": "integer"},
             "metrics": {
