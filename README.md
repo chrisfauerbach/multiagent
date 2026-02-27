@@ -1,6 +1,6 @@
 # AI Publishing House - Multi-Agent System
 
-A multi-agent AI publishing house that automatically generates short stories. Five dockerized Python agents communicate via Redis queues, use Ollama (deepseek-r1:8b) for generation, store documents in Elasticsearch, and are monitored via a FastAPI dashboard.
+A multi-agent AI publishing house that automatically generates short stories. Six dockerized Python agents communicate via Redis queues, use Ollama (deepseek-r1:8b) for generation, store documents in Elasticsearch, and are monitored via a FastAPI dashboard.
 
 ## Architecture
 
@@ -23,6 +23,7 @@ graph TB
         W["Writer"]
         R["Reviewer"]
         E["Editor"]
+        CD["Cover Designer"]
     end
 
     Dashboard -->|"POST /api/pipeline/trigger"| Redis
@@ -33,18 +34,21 @@ graph TB
     Redis <-->|"queue:writer"| W
     Redis <-->|"queue:reviewer"| R
     Redis <-->|"queue:editor"| E
+    Redis <-->|"queue:cover_designer"| CD
 
     EIC -->|"reads/writes stories"| ES
     PG -->|"saves prompt"| ES
     W -->|"saves drafts"| ES
     R -->|"saves feedback"| ES
     E -->|"saves feedback"| ES
+    CD -->|"saves cover SVG"| ES
 
     PG -->|"generate prompt"| Ollama
     W -->|"write/revise"| Ollama
     R -->|"review"| Ollama
     E -->|"edit"| Ollama
     EIC -->|"evaluate feedback"| Ollama
+    CD -->|"generate SVG cover"| Ollama
 
     Dashboard -->|"reads stories + activity"| ES
 ```
@@ -62,7 +66,15 @@ sequenceDiagram
     participant ES as Elasticsearch
 
     U->>O: start_new_story (optional user prompt)
-    O->>PG: generate_prompt
+
+    alt Concurrency slot available
+        O->>PG: generate_prompt
+    else At capacity
+        O->>ES: save story (QUEUED)
+        Note over O: Dispatched when a slot opens
+        O->>PG: generate_prompt
+    end
+
     PG->>ES: save story (PROMPT_CREATED)
     PG->>O: prompt_ready
 
@@ -81,9 +93,9 @@ sequenceDiagram
         E->>O: edit_complete
 
         alt Both approve
-            O->>ES: APPROVED → PUBLISHED
+            O->>ES: APPROVED
         else Max revisions reached
-            O->>ES: APPROVED → PUBLISHED
+            O->>ES: APPROVED
         else Changes needed
             O->>ES: update status (REVISION_NEEDED)
             O->>W: revise (with feedback summary)
@@ -91,13 +103,21 @@ sequenceDiagram
             W->>O: revision_ready
         end
     end
+
+    participant CD as Cover Designer
+    O->>CD: design_cover
+    CD->>ES: save cover SVG (DESIGNING_COVER)
+    CD->>O: cover_ready
+    O->>ES: PUBLISHED
 ```
 
 ## Story States
 
 ```mermaid
 stateDiagram-v2
+    [*] --> QUEUED: at capacity
     [*] --> PROMPT_CREATED: generate_prompt
+    QUEUED --> PROMPT_CREATED: slot opens
     PROMPT_CREATED --> DRAFT_WRITTEN: write_draft
     DRAFT_WRITTEN --> IN_REVIEW: send to reviewer
     IN_REVIEW --> APPROVED: both approve
@@ -105,7 +125,8 @@ stateDiagram-v2
     REVISION_NEEDED --> REVISED: writer revises
     REVISED --> IN_REVIEW: re-review
     IN_REVIEW --> APPROVED: max revisions reached
-    APPROVED --> PUBLISHED: publish
+    APPROVED --> DESIGNING_COVER: design_cover
+    DESIGNING_COVER --> PUBLISHED: cover_ready
     PUBLISHED --> [*]
 ```
 
@@ -133,12 +154,13 @@ docker compose exec orchestrator python -m scripts.seed_prompt "A detective who 
 | redis | redis:7-alpine | 6379 | Message queues + activity pub/sub |
 | elasticsearch | ES 8.13 | 9200 | Story storage + activity logs |
 | ollama | ollama/ollama | 11434 | LLM inference (GPU) |
-| orchestrator | Dockerfile.agent | — | Central coordinator |
+| orchestrator | Dockerfile.agent | — | Central coordinator + concurrency gating |
 | prompt-generator | Dockerfile.agent | — | Creates writing prompts |
 | writer | Dockerfile.agent | — | Writes drafts + revisions |
 | reviewer | Dockerfile.agent | — | Substantive feedback |
 | editor | Dockerfile.agent | — | Line-level feedback |
-| dashboard | Dockerfile.dashboard | 8000 | FastAPI monitoring UI |
+| cover-designer | Dockerfile.agent | — | Generates SVG book covers |
+| dashboard | Dockerfile.dashboard | 8000 | FastAPI monitoring UI + PDF export |
 | init-services | Dockerfile.agent | — | One-shot ES index creation |
 
 ## Project Structure
@@ -159,16 +181,19 @@ multiagent/
 │   ├── ollama_client.py          # Ollama wrapper with retry + token tracking
 │   ├── config_loader.py          # YAML + prompt file loading
 │   ├── constants.py              # Queue names, index names, actions
+│   ├── svg_utils.py              # SVG sanitization (text wrap, font clamp, overlap fix)
 │   └── logging_config.py         # structlog JSON setup
 ├── agents/
 │   ├── base_agent.py             # Abstract base with main loop + metrics
-│   ├── editor_in_chief.py        # Orchestrator with state machine
+│   ├── editor_in_chief.py        # Orchestrator with state machine + concurrency
 │   ├── prompt_generator.py
 │   ├── writer.py
 │   ├── reviewer.py
-│   └── editor.py
+│   ├── editor.py
+│   └── cover_designer.py         # SVG book cover generation
 ├── dashboard/
 │   ├── app.py                    # FastAPI app
+│   ├── pdf_export.py             # Book-style PDF generation with cover art
 │   ├── routes/                   # Pipeline, stories, agents routes
 │   ├── templates/                # Jinja2 HTML templates
 │   └── static/style.css
@@ -176,6 +201,36 @@ multiagent/
     ├── init_elasticsearch.py     # ES index creation
     └── seed_prompt.py            # CLI story trigger
 ```
+
+## Cover Designer
+
+After a story is approved, the cover designer agent generates an SVG book cover using the LLM. The cover includes:
+
+- Genre-appropriate color palette and decorative elements
+- Story title and "AI Publishing House" imprint
+- 600x900 viewBox (standard book cover proportions)
+
+Generated SVGs are sanitized by `shared/svg_utils.py` which fixes common LLM output issues:
+- Broken/malformed `<svg>` opening tags
+- Text centering (`text-anchor="middle"`)
+- Font size clamping (max 48px)
+- Word wrapping for long text (max 20 chars/line via `<tspan>` elements)
+- Overlap prevention (cumulative y-shift tracking across text elements)
+
+Covers are rendered inline on the story detail page and embedded as full-page images in PDF exports (via cairosvg).
+
+## Concurrency Gating
+
+The orchestrator limits how many stories run in parallel, controlled by `max_concurrent_stories` in `config/pipeline.yml` (default: 1 for single-GPU setups). Excess stories are buffered in an in-memory queue and saved to Elasticsearch with `QUEUED` status for dashboard visibility. When a story finishes, the next queued story is dispatched automatically.
+
+## PDF Export
+
+The dashboard provides PDF downloads for individual stories and multi-story anthologies:
+
+- **Single story**: Cover art (SVG → PNG) as title page, followed by chapter with book typography
+- **Anthology**: Text title page, table of contents, then each story with its cover art
+- DejaVu Serif font for body text, justified paragraphs with first-line indentation
+- Running headers (book title on even pages, chapter title on odd pages) and page numbers
 
 ## Metrics
 
