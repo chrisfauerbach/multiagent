@@ -8,7 +8,7 @@ from fastapi import APIRouter, Form, Request
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 
-from shared.config_loader import load_pipeline_config
+from shared.config_loader import load_genres, load_pipeline_config
 from shared.constants import QUEUE_ORCHESTRATOR
 from shared.elasticsearch_client import get_es_client, get_pipeline_counts, list_stories
 from shared.models import AgentMessage
@@ -43,17 +43,19 @@ async def index(request: Request):
     active_stories = list_stories(es, size=20)
     config = load_pipeline_config()["ollama"]
     models = _fetch_ollama_models()
+    genres = sorted(load_genres().get("genres", []), key=lambda g: g["name"])
     return templates.TemplateResponse("index.html", {
         "request": request,
         "counts": counts,
         "stories": active_stories,
         "models": models,
         "default_model": config["model"],
+        "genres": genres,
     })
 
 
 @router.post("/api/pipeline/trigger")
-async def trigger_story(user_prompt: str = Form(""), model: str = Form("")):
+async def trigger_story(user_prompt: str = Form(""), model: str = Form(""), genre: str = Form("")):
     client = get_redis_client()
     story_id = uuid.uuid4().hex[:12]
     payload = {}
@@ -61,6 +63,8 @@ async def trigger_story(user_prompt: str = Form(""), model: str = Form("")):
         payload["user_prompt"] = user_prompt.strip()
     if model.strip():
         payload["model"] = model.strip()
+    if genre.strip():
+        payload["genre"] = genre.strip()
     msg = AgentMessage(
         story_id=story_id,
         action="start_new_story",

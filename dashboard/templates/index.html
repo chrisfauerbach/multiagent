@@ -6,6 +6,12 @@
 <form action="/api/pipeline/trigger" method="post" style="margin-bottom: 2rem;">
     <textarea name="user_prompt" rows="3" placeholder="Optional: describe your story idea (leave empty for a random prompt)" class="prompt-input"></textarea>
     <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+        <select name="genre" class="model-select">
+            <option value="">Random (any genre)</option>
+            {% for g in genres %}
+            <option value="{{ g.name }}">{{ g.name.replace("_", " ").title() }}</option>
+            {% endfor %}
+        </select>
         <select name="model" class="model-select">
             {% for m in models %}
             <option value="{{ m.name }}" {% if m.name == default_model %}selected{% endif %}>

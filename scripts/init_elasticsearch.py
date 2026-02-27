@@ -5,7 +5,7 @@ import time
 from elasticsearch import Elasticsearch
 
 from shared.config_loader import load_pipeline_config
-from shared.constants import ACTIVITY_LOGS_INDEX, STORIES_INDEX
+from shared.constants import ACTIVITY_LOGS_INDEX, ANTHOLOGIES_INDEX, STORIES_INDEX
 
 STORIES_MAPPING = {
     "settings": {"number_of_shards": 1, "number_of_replicas": 0},
@@ -87,6 +87,21 @@ ACTIVITY_LOGS_MAPPING = {
 }
 
 
+ANTHOLOGIES_MAPPING = {
+    "settings": {"number_of_shards": 1, "number_of_replicas": 0},
+    "mappings": {
+        "properties": {
+            "anthology_id": {"type": "keyword"},
+            "title": {"type": "text"},
+            "description": {"type": "text"},
+            "story_ids": {"type": "keyword"},
+            "created_at": {"type": "date"},
+            "updated_at": {"type": "date"},
+        }
+    },
+}
+
+
 def wait_for_elasticsearch(es: Elasticsearch, retries: int = 30, delay: int = 2) -> None:
     for i in range(retries):
         try:
@@ -115,6 +130,7 @@ def main():
     wait_for_elasticsearch(es)
     create_index(es, STORIES_INDEX, STORIES_MAPPING)
     create_index(es, ACTIVITY_LOGS_INDEX, ACTIVITY_LOGS_MAPPING)
+    create_index(es, ANTHOLOGIES_INDEX, ANTHOLOGIES_MAPPING)
     print("Elasticsearch initialization complete.")
 
 

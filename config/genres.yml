@@ -48,3 +48,103 @@ genres:
       - "the last broadcast from a research station"
     word_count_min: 600
     word_count_max: 1200
+
+  - name: historical_fiction
+    description: "Stories set in a real historical period, blending fact with imagination"
+    themes:
+      - "a spy carrying secrets across wartime borders"
+      - "forbidden friendship during a revolution"
+      - "a shipwreck survivor in an unfamiliar land"
+      - "the last days of a crumbling empire"
+    word_count_min: 800
+    word_count_max: 1500
+
+  - name: romance
+    description: "Stories centered on love, relationships, and emotional connection"
+    themes:
+      - "rivals forced to work together"
+      - "a second chance at a lost love"
+      - "strangers stuck together by circumstance"
+      - "a letter delivered to the wrong address"
+    word_count_min: 800
+    word_count_max: 1500
+
+  - name: thriller
+    description: "Fast-paced stories with high stakes, suspense, and danger"
+    themes:
+      - "a witness who knows too much"
+      - "a countdown to prevent a catastrophe"
+      - "being hunted by someone you trusted"
+      - "a stranger on a train with a proposition"
+    word_count_min: 800
+    word_count_max: 1500
+
+  - name: dystopian
+    description: "Stories set in oppressive or collapsed societies"
+    themes:
+      - "a forbidden book in a world without reading"
+      - "the first generation born after the collapse"
+      - "an underground network fighting conformity"
+      - "a lottery that nobody wants to win"
+    word_count_min: 800
+    word_count_max: 1500
+
+  - name: adventure
+    description: "Action-driven stories of exploration, quests, and daring feats"
+    themes:
+      - "a treasure map with one piece missing"
+      - "an expedition into uncharted territory"
+      - "a race against a rival to reach a lost city"
+      - "surviving alone in the wilderness"
+    word_count_min: 800
+    word_count_max: 1500
+
+  - name: satire
+    description: "Stories using humor, irony, and exaggeration to critique society"
+    themes:
+      - "a corporation that owns an entire emotion"
+      - "a town where lying is physically impossible"
+      - "the world's most mundane superpower"
+      - "a bureaucracy that outlives civilization"
+    word_count_min: 600
+    word_count_max: 1200
+
+  - name: western
+    description: "Stories set in the rugged frontier of the American West"
+    themes:
+      - "a stranger rides into a lawless town"
+      - "a bounty hunter with a personal code"
+      - "the last stand at a remote outpost"
+      - "a train robbery that goes wrong"
+    word_count_min: 800
+    word_count_max: 1500
+
+  - name: gothic
+    description: "Dark, atmospheric stories blending romance, mystery, and the macabre"
+    themes:
+      - "a governess at a manor with a sealed wing"
+      - "a portrait that seems to change overnight"
+      - "an inheritance with sinister conditions"
+      - "a fog-bound village with a forgotten cemetery"
+    word_count_min: 600
+    word_count_max: 1200
+
+  - name: comedy
+    description: "Stories driven by humor, absurdity, and comedic situations"
+    themes:
+      - "a case of catastrophically mistaken identity"
+      - "the worst best man speech ever given"
+      - "a neighborhood feud that spirals out of control"
+      - "an AI assistant that takes instructions too literally"
+    word_count_min: 600
+    word_count_max: 1200
+
+  - name: fable
+    description: "Short allegorical stories with a moral lesson, often with animal characters"
+    themes:
+      - "a clever fox who outsmarts themselves"
+      - "two rivals who need each other to survive"
+      - "the smallest creature solves the biggest problem"
+      - "a gift that reveals true character"
+    word_count_min: 400
+    word_count_max: 800

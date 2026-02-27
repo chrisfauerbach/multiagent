@@ -145,6 +145,7 @@ open http://localhost:8000
 # Or trigger a story from CLI
 docker compose exec orchestrator python -m scripts.seed_prompt
 docker compose exec orchestrator python -m scripts.seed_prompt "A detective who can taste lies"
+docker compose exec orchestrator python -m scripts.seed_prompt --genre horror "a dark forest"
 ```
 
 ## Services
@@ -194,7 +195,7 @@ multiagent/
 ├── dashboard/
 │   ├── app.py                    # FastAPI app
 │   ├── pdf_export.py             # Book-style PDF generation with cover art
-│   ├── routes/                   # Pipeline, stories, agents routes
+│   ├── routes/                   # Pipeline, stories, agents, anthologies routes
 │   ├── templates/                # Jinja2 HTML templates
 │   └── static/style.css
 └── scripts/
@@ -223,12 +224,24 @@ Covers are rendered inline on the story detail page and embedded as full-page im
 
 The orchestrator limits how many stories run in parallel, controlled by `max_concurrent_stories` in `config/pipeline.yml` (default: 1 for single-GPU setups). Excess stories are buffered in an in-memory queue and saved to Elasticsearch with `QUEUED` status for dashboard visibility. When a story finishes, the next queued story is dispatched automatically.
 
+## Anthologies
+
+The dashboard includes an **Anthologies** tab for creating and managing ebook collections from published stories:
+
+- **Create** an anthology with a title, then add/remove published stories via checkboxes
+- **AI-generated descriptions**: Click "Generate with AI" to produce a 2-3 sentence blurb from story titles, genres, and excerpts using the configured Ollama model
+- **Editable**: Title and description can be hand-edited after generation
+- **PDF download**: Generates a book-style PDF with custom title page, "About This Collection" page (if description exists), table of contents, and all included stories with cover art
+- **Many-to-many**: Stories can belong to multiple anthologies
+
+Data is stored in the `anthologies` Elasticsearch index. The Anthology model lives in `shared/models.py`.
+
 ## PDF Export
 
 The dashboard provides PDF downloads for individual stories and multi-story anthologies:
 
 - **Single story**: Cover art (SVG → PNG) as title page, followed by chapter with book typography
-- **Anthology**: Text title page, table of contents, then each story with its cover art
+- **Anthology**: Custom title page, optional description page, table of contents, then each story with its cover art
 - DejaVu Serif font for body text, justified paragraphs with first-line indentation
 - Running headers (book title on even pages, chapter title on odd pages) and page numbers
 

@@ -204,17 +204,35 @@ def generate_single_story_pdf(story) -> bytes:
     return buf.getvalue()
 
 
-def generate_anthology_pdf(stories: list) -> bytes:
+def generate_anthology_pdf(stories: list, title: str = "", description: str = "") -> bytes:
     """Generate a book-style PDF containing multiple stories."""
     now = datetime.now(timezone.utc)
+    anthology_title = title or "Collected Stories"
 
-    pdf = BookPDF(title="AI Publishing House Anthology")
+    pdf = BookPDF(title=anthology_title)
 
     pdf._title_page(
-        title="Collected Stories",
+        title=anthology_title,
         subtitle="AI Publishing House",
         year=now.strftime("%Y"),
     )
+
+    # About This Collection page
+    if description:
+        pdf.add_page()
+        pdf._chapter_title = "About This Collection"
+        pdf.set_y(50)
+        pdf.set_font(FONT, "B", 18)
+        pdf.set_text_color(30, 30, 30)
+        pdf.cell(0, 10, "About This Collection", align="C", new_x="LMARGIN", new_y="NEXT")
+        pdf.ln(12)
+        pdf.set_font(FONT, "", 11)
+        pdf.set_text_color(60, 60, 60)
+        pdf.set_left_margin(MARGIN_INNER)
+        pdf.set_right_margin(MARGIN_OUTER)
+        pdf.multi_cell(BODY_W, 6, description, align="J")
+        pdf.set_left_margin(10)
+        pdf.set_right_margin(10)
 
     # Table of contents
     pdf.add_page()

@@ -6,8 +6,8 @@ from elasticsearch import Elasticsearch
 import structlog
 
 from shared.config_loader import load_pipeline_config
-from shared.constants import ACTIVITY_LOGS_INDEX, STORIES_INDEX
-from shared.models import ActivityLog, Story
+from shared.constants import ACTIVITY_LOGS_INDEX, ANTHOLOGIES_INDEX, STORIES_INDEX
+from shared.models import ActivityLog, Anthology, Story
 
 logger = structlog.get_logger()
 
@@ -95,3 +95,40 @@ def get_activity_logs(es: Elasticsearch, size: int = 100) -> list[ActivityLog]:
         return [ActivityLog.model_validate(hit["_source"]) for hit in result["hits"]["hits"]]
     except Exception:
         return []
+
+
+# --- Anthology CRUD ---
+
+def save_anthology(es: Elasticsearch, anthology: Anthology) -> None:
+    anthology.updated_at = datetime.now(timezone.utc)
+    es.index(index=ANTHOLOGIES_INDEX, id=anthology.anthology_id, document=anthology.model_dump(mode="json"))
+    logger.info("anthology_saved", anthology_id=anthology.anthology_id)
+
+
+def get_anthology(es: Elasticsearch, anthology_id: str) -> Anthology | None:
+    try:
+        result = es.get(index=ANTHOLOGIES_INDEX, id=anthology_id)
+        return Anthology.model_validate(result["_source"])
+    except Exception:
+        return None
+
+
+def list_anthologies(es: Elasticsearch, size: int = 50) -> list[Anthology]:
+    try:
+        result = es.search(
+            index=ANTHOLOGIES_INDEX,
+            query={"match_all": {}},
+            sort=[{"updated_at": {"order": "desc"}}],
+            size=size,
+        )
+        return [Anthology.model_validate(hit["_source"]) for hit in result["hits"]["hits"]]
+    except Exception:
+        return []
+
+
+def delete_anthology(es: Elasticsearch, anthology_id: str) -> None:
+    try:
+        es.delete(index=ANTHOLOGIES_INDEX, id=anthology_id)
+        logger.info("anthology_deleted", anthology_id=anthology_id)
+    except Exception:
+        logger.error("anthology_delete_failed", anthology_id=anthology_id)

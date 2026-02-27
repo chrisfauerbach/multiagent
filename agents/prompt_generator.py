@@ -27,13 +27,32 @@ class PromptGeneratorAgent(BaseAgent):
         story_id = message.story_id
         user_idea = message.payload.get("user_prompt", "")
         model = message.payload.get("model", "")
+        requested_genre = message.payload.get("genre", "")
         self.log_activity("generating_prompt", f"Creating prompt for story {story_id}", story_id)
 
-        genre = random.choice(self.genres_config["genres"])
+        # Use preselected genre if it matches a known genre, otherwise random
+        genre = None
+        if requested_genre:
+            genre = next(
+                (g for g in self.genres_config["genres"] if g["name"] == requested_genre),
+                None,
+            )
+        if genre is None:
+            genre = random.choice(self.genres_config["genres"])
         theme = random.choice(genre["themes"])
         target_word_count = random.randint(genre["word_count_min"], genre["word_count_max"])
 
-        if user_idea:
+        if user_idea and requested_genre:
+            user_prompt = (
+                f"A user has requested a story with this idea:\n\n"
+                f'"{user_idea}"\n\n'
+                f"Genre: {genre['name']}\n"
+                f"Genre description: {genre['description']}\n"
+                f"Target word count: {target_word_count}\n\n"
+                f"Build a detailed writing prompt around the user's idea, "
+                f"ensuring it fits the {genre['name'].replace('_', ' ')} genre."
+            )
+        elif user_idea:
             user_prompt = (
                 f"A user has requested a story with this idea:\n\n"
                 f'"{user_idea}"\n\n'

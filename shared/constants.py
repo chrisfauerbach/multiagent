@@ -13,6 +13,7 @@ ACTIVITY_CHANNEL = "agent:activity"
 # Elasticsearch index names
 STORIES_INDEX = "stories"
 ACTIVITY_LOGS_INDEX = "activity_logs"
+ANTHOLOGIES_INDEX = "anthologies"
 
 # Story statuses
 STATUS_QUEUED = "QUEUED"

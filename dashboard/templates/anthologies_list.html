@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Anthologies - AI Publishing House{% endblock %}
+{% block content %}
+<h1>Anthologies</h1>
+
+<div class="card" style="margin-bottom: 2rem;">
+    <h2>Create New Anthology</h2>
+    <form action="/api/anthologies" method="post" style="display: flex; gap: 0.5rem; align-items: center;">
+        <input type="text" name="title" placeholder="Anthology title..." required
+               style="flex: 1; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+        <button type="submit" class="btn btn-primary">Create</button>
+    </form>
+</div>
+
+{% if anthologies %}
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Stories</th>
+            <th>Description</th>
+            <th>Created</th>
+            <th>Updated</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for a in anthologies %}
+        <tr>
+            <td><a href="/anthologies/{{ a.anthology_id }}">{{ a.title or "Untitled" }}</a></td>
+            <td>{{ a.story_ids | length }}</td>
+            <td class="detail-cell">{{ a.description[:80] }}{% if a.description | length > 80 %}...{% endif %}</td>
+            <td>{{ a.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+            <td>{{ a.updated_at.strftime('%Y-%m-%d %H:%M') }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="empty-state">No anthologies yet. Create one above.</p>
+{% endif %}
+{% endblock %}

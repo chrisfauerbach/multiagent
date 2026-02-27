@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}{{ anthology.title or "Untitled" }} - Anthology{% endblock %}
+{% block content %}
+
+<h1>{{ anthology.title or "Untitled" }}</h1>
+
+<!-- Editable Title -->
+<section class="section">
+    <h2>Title</h2>
+    <form action="/api/anthologies/{{ anthology.anthology_id }}/title" method="post"
+          style="display: flex; gap: 0.5rem; align-items: center;">
+        <input type="text" name="title" value="{{ anthology.title }}" required
+               style="flex: 1; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+        <button type="submit" class="btn btn-primary">Save Title</button>
+    </form>
+</section>
+
+<!-- Metadata -->
+<div class="story-meta">
+    <span>ID: {{ anthology.anthology_id }}</span>
+    <span>Stories: {{ anthology.story_ids | length }}</span>
+    <span>Created: {{ anthology.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+    {% if included_stories %}
+    <a href="/anthologies/{{ anthology.anthology_id }}/pdf" class="btn btn-primary">Download PDF</a>
+    {% endif %}
+</div>
+
+<!-- Description -->
+<section class="section">
+    <h2>Description</h2>
+    <form action="/api/anthologies/{{ anthology.anthology_id }}/description" method="post">
+        <textarea name="description" rows="4"
+                  style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; font-family: inherit; resize: vertical;">{{ anthology.description }}</textarea>
+        <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+            <button type="submit" class="btn btn-primary">Save Description</button>
+            <button type="button" class="btn" onclick="generateDescription()">Generate with AI</button>
+        </div>
+    </form>
+</section>
+
+<!-- Included Stories -->
+<section class="section">
+    <h2>Included Stories ({{ included_stories | length }})</h2>
+    {% if included_stories %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Genre</th>
+                <th>Words</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in included_stories %}
+            <tr>
+                <td><a href="/stories/{{ s.story_id }}">{{ s.title or "Untitled" }}</a></td>
+                <td>
+                    {% if s.prompt and s.prompt.genre %}
+                    <span class="tag tag-genre">{{ s.prompt.genre.replace("_", " ") }}</span>
+                    {% else %}&mdash;{% endif %}
+                </td>
+                <td>{{ s.current_draft.split() | length if s.current_draft else 0 }}</td>
+                <td>
+                    <form action="/api/anthologies/{{ anthology.anthology_id }}/stories/{{ s.story_id }}/remove"
+                          method="post" style="display: inline;"
+                          onsubmit="return confirm('Remove this story from the anthology?');">
+                        <button type="submit" class="btn">Remove</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="empty-state">No stories added yet.</p>
+    {% endif %}
+</section>
+
+<!-- Add Stories -->
+{% if available_stories %}
+<section class="section">
+    <h2>Add Stories</h2>
+    <form action="/api/anthologies/{{ anthology.anthology_id }}/stories" method="post">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th class="col-check"><input type="checkbox" id="select-all" onchange="toggleAll(this)"></th>
+                    <th>Title</th>
+                    <th>Genre</th>
+                    <th>Words</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in available_stories %}
+                <tr>
+                    <td class="col-check">
+                        <input type="checkbox" name="story_ids" value="{{ s.story_id }}" class="story-check">
+                    </td>
+                    <td><a href="/stories/{{ s.story_id }}">{{ s.title or "Untitled" }}</a></td>
+                    <td>
+                        {% if s.prompt and s.prompt.genre %}
+                        <span class="tag tag-genre">{{ s.prompt.genre.replace("_", " ") }}</span>
+                        {% else %}&mdash;{% endif %}
+                    </td>
+                    <td>{{ s.current_draft.split() | length if s.current_draft else 0 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <button type="submit" class="btn btn-primary" style="margin-top: 0.5rem;">Add Selected</button>
+    </form>
+</section>
+{% endif %}
+
+<!-- Delete -->
+<section class="section" style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #eee;">
+    <form action="/api/anthologies/{{ anthology.anthology_id }}/delete" method="post"
+          onsubmit="return confirm('Delete this anthology? This cannot be undone.');">
+        <button type="submit" class="btn" style="color: #e74c3c;">Delete Anthology</button>
+    </form>
+</section>
+
+<script>
+function toggleAll(master) {
+    document.querySelectorAll(".story-check").forEach(function(cb) { cb.checked = master.checked; });
+}
+function generateDescription() {
+    if (!confirm('Generate a new description with AI? This will replace the current description.')) return;
+    var form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/api/anthologies/{{ anthology.anthology_id }}/generate-description';
+    document.body.appendChild(form);
+    form.submit();
+}
+</script>
+
+{% endblock %}

@@ -104,3 +104,12 @@ class ActivityLog(BaseModel):
     action: str
     detail: str = ""
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class Anthology(BaseModel):
+    anthology_id: str = Field(default_factory=lambda: uuid.uuid4().hex[:12])
+    title: str = ""
+    description: str = ""
+    story_ids: list[str] = Field(default_factory=list)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
