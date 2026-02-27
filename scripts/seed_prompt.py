@@ -7,6 +7,7 @@ Usage:
 import sys
 import uuid
 
+from shared.config_loader import load_pipeline_config
 from shared.constants import QUEUE_ORCHESTRATOR
 from shared.models import AgentMessage
 from shared.redis_client import enqueue_message, get_redis_client
@@ -14,9 +15,10 @@ from shared.redis_client import enqueue_message, get_redis_client
 
 def main():
     client = get_redis_client()
+    config = load_pipeline_config()
     story_id = uuid.uuid4().hex[:12]
     user_prompt = " ".join(sys.argv[1:]).strip()
-    payload = {}
+    payload = {"model": config["ollama"]["model"]}
     if user_prompt:
         payload["user_prompt"] = user_prompt
     msg = AgentMessage(
